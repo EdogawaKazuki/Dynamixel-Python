@@ -14,6 +14,9 @@ DYNAMIXEL_SERVO_ID_LIST = [11, 12, 14]
 # init robot arm
 arm = RobotArmClient.RobotArmClient()
 arm.connect(DYNAMIXEL_ADDR, DYNAMIXEL_PROTOCOL, DYNAMIXEL_BAUD_RATE)
+time.sleep(0.5)
+tmp = arm.get_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST)
+angles = [tmp[0][0] - 180, 270 - tmp[0][1], tmp[2] - 180]
 
 locked_servo_id = []
 is_locked = False
@@ -83,6 +86,19 @@ def task_space_2_joint_space(x, y, z):
     angles[2] = (angles[2] - alpha) / math.pi * 180
     return angles
 
+def joint_space_2_task_space(joints):
+    Angle1Sin = math.sin(math.radians(joints[0]))
+    Angle1Cos = math.cos(math.radians(joints[0]))
+    Angle2Sin = math.sin(math.radians(joints[1]))
+    Angle2Cos = math.cos(math.radians(joints[1]))
+    Angle23Sin = math.sin(math.radians(joints[1] + joints[2]))
+    Angle23Cos = math.cos(math.radians(joints[1] + joints[2]))
+    x = -Angle1Sin * Angle23Cos * 12.3 + (
+                -12.7 * Angle1Sin * Angle2Cos - 2.5 * Angle1Sin * Angle2Sin) + 0.001
+    y = Angle1Cos * Angle23Cos * 12.3 + (
+                12.7 * Angle1Cos * Angle2Cos + 2.5 * Angle1Cos * Angle2Sin) + 0.001
+    z = Angle23Sin * 12.3 + (12.7 * Angle2Sin - 2.5 * Angle2Cos) + 7.701
+    return [x,y,z]
 
 # Modify this function to generate trajectories
 # Frequency is 50Hz (i.e. each frame costs 0.02s)
@@ -91,6 +107,38 @@ def generate_trajectory():
     joint_1_list = []
     joint_2_list = []
     light_list = []
+
+    # prepare step
+    current_pos = joint_space_2_task_space(angles)
+    init_pos = [10, 5, 10]
+    duration = 1
+    for t in [i / 50 for i in range(duration * 50)]:
+        # init lighting flag
+        light = 0
+
+        # ToDo
+        # update coords
+        x = current_pos[0] + (init_pos[0] - current_pos[0]) * t
+        y = current_pos[1] + (init_pos[1] - current_pos[1]) * t
+        z = current_pos[2] + (init_pos[2] - current_pos[2]) * t
+
+        # convert task space to joint space
+        angle0, angle1, angle2 = task_space_2_joint_space(x, y, z)
+
+        # ToDo
+        # update light,
+        if 0.25 <= t <= 0.5 or 0.75 <= t <= 1:
+            #R, G, B
+            # 1 for full power, 0 for no power
+            light = [0, 1, 1]
+        else:
+            light = [1, 1, 0]
+
+        # push all frame to the frame list
+        joint_0_list.append(angle0)
+        joint_1_list.append(angle1)
+        joint_2_list.append(angle2)
+        light_list.append(light)
 
     # check from here
     # Example Code
@@ -185,7 +233,7 @@ def generate_trajectory():
         # end
 
     
-    # part 3
+    # part 4
     duration = 1
     for t in [i / 50 for i in range(duration * 50)]:
         # init lighting flag
