@@ -1,7 +1,7 @@
 import time
 
 from pyfirmata import ArduinoMega, util
-board = ArduinoMega('COM8')
+board = ArduinoMega('COM16')
 
 r = board.get_pin("d:8:p")
 g = board.get_pin("d:9:p")
@@ -20,5 +20,5 @@ while True:
     if i <= 1:
         step = 1
     i += step
-    set_color((i / 255.0, 1 - i /255.0 , 1))
+    set_color((i / 255.0, 1 - i /255.0 , 0))
     time.sleep(0.001)

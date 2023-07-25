@@ -5,7 +5,7 @@ from pyfirmata import ArduinoMega
 
 import RobotArmClient
 
-DYNAMIXEL_ADDR = "COM10"
+DYNAMIXEL_ADDR = "COM5"
 DYNAMIXEL_PROTOCOL = 2.0
 DYNAMIXEL_BAUD_RATE = 1000000
 DYNAMIXEL_SERVO_ID_LIST = [11, 12, 14]
@@ -36,9 +36,9 @@ g = board.get_pin("d:9:p")
 b = board.get_pin("d:10:p")
 
 def set_color(color):
-    r.write(color[0])
-    g.write(color[1])
-    b.write(color[2])
+    r.write(1 - color[0])
+    g.write(1 - color[1])
+    b.write(1 - color[2])
 
 # This function converts task space to joint space
 # Input: Task space coord. For example TaskSpace2JointSpace(10, 20, 10)
@@ -104,9 +104,9 @@ def generate_trajectory():
 
         # ToDo
         # update coords
-        x = 0 + 10 * t
-        y = 10 + 10 * t
-        z = 0 + 10 * t
+        x = 10 - 20 * t
+        y = 5 
+        z = 15
 
         # convert task space to joint space
         angle0, angle1, angle2 = task_space_2_joint_space(x, y, z)
@@ -114,7 +114,9 @@ def generate_trajectory():
         # ToDo
         # update light,
         if 0.25 <= t <= 0.5:
-            light = [1, 0, 1]
+            #R, G, B
+            # 1 for full power, 0 for no power
+            light = [0.5, 0, 1]
         else:
             light = [0, 1, 1]
 
@@ -132,9 +134,38 @@ def generate_trajectory():
 
         # ToDo
         # update coords
-        x = 10 - 10 * t
-        y = 20 - 10 * t
-        z = 10 - 10 * t
+        x = -10
+        y = 5
+        z = 15 + 10 * t
+
+        # convert task space to joint space
+        angle0, angle1, angle2 = task_space_2_joint_space(x, y, z)
+
+        # ToDo
+        # update light,
+        if 0.25 <= t <= 0.5 or 0.75 <= t <= 1:
+            light = [1, 0, 1]
+        else:
+            light = [0, 1, 1]
+
+        # push all frame to the frame list
+        joint_0_list.append(angle0)
+        joint_1_list.append(angle1)
+        joint_2_list.append(angle2)
+        light_list.append(light)
+        # end
+    
+    # part 3
+    duration = 1
+    for t in [i / 50 for i in range(duration * 50)]:
+        # init lighting flag
+        light = 0
+
+        # ToDo
+        # update coords
+        x = -10 + 20 * t
+        y = 5
+        z = 25
 
         # convert task space to joint space
         angle0, angle1, angle2 = task_space_2_joint_space(x, y, z)
@@ -153,6 +184,35 @@ def generate_trajectory():
         light_list.append(light)
         # end
 
+    
+    # part 3
+    duration = 1
+    for t in [i / 50 for i in range(duration * 50)]:
+        # init lighting flag
+        light = 0
+
+        # ToDo
+        # update coords
+        x = 10
+        y = 5
+        z = 25 - 10 * t
+
+        # convert task space to joint space
+        angle0, angle1, angle2 = task_space_2_joint_space(x, y, z)
+
+        # ToDo
+        # update light,
+        if 0.25 <= t <= 0.5 or 0.75 <= t <= 1:
+            light = [1, 0, 1]
+        else:
+            light = [0, 1, 1]
+
+        # push all frame to the frame list
+        joint_0_list.append(angle0)
+        joint_1_list.append(angle1)
+        joint_2_list.append(angle2)
+        light_list.append(light)
+        # end
 
 
 
