@@ -1,0 +1,1 @@
+print(int.to_bytes(0, 1, 'little'))
