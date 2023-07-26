@@ -1,7 +1,7 @@
 import time
 
 from pyfirmata import ArduinoMega, util
-board = ArduinoMega('COM16')
+board = ArduinoMega('COM12')
 
 r = board.get_pin("d:8:p")
 g = board.get_pin("d:9:p")
