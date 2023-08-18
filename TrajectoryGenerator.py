@@ -5,8 +5,8 @@ from pyfirmata import ArduinoMega
 
 import RobotArmClient
 
-board = ArduinoMega('COM12')
-DYNAMIXEL_ADDR = "COM10"
+board = ArduinoMega('COM6')
+DYNAMIXEL_ADDR = "COM7"
 DYNAMIXEL_PROTOCOL = 2.0
 DYNAMIXEL_BAUD_RATE = 1000000
 DYNAMIXEL_SERVO_ID_LIST = [11, 12, 14]
