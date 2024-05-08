@@ -2,8 +2,20 @@ import socket
 import struct
 import threading
 import time
-import RobotArmClient
+import DynamixelArmClient
 
+
+def bytes_to_float(byte_array, byte_order='<'):
+    # Assuming the byte array represents a 32-bit floating-point number (single precision)
+    float_size = 4
+
+    # Ensure the byte array length matches the float size
+    if len(byte_array) != float_size:
+        raise ValueError(f"Invalid byte array length. Expected {float_size} bytes.")
+
+    # Convert byte array to float
+    format_str = f"{byte_order}f"
+    return struct.unpack(format_str, byte_array)[0]
 
 class UDPServer:
     def __init__(self, host, port):

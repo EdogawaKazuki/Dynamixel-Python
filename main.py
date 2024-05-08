@@ -1,6 +1,6 @@
 import threading
 
-import RobotArmClient
+import DynamixelArmClient
 import time
 import struct
 import socket
@@ -41,12 +41,21 @@ def sender():
     while True:
         if not is_connected or client_addr is None or shut_down or is_locked:
             break
+        print(is_connected)
         send_data = []
+        tmp = arm.get_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST)
+        if tmp == -1:
+            continue
+        for i in range(len(servo_angle_list)):
+            tmp_servo_angle_list[i], tmp_servo_pwm_list[i] = tmp[i]
+        servo_angle_list[0] = tmp_servo_angle_list[0] - 180
+        servo_angle_list[1] = 180 - tmp_servo_angle_list[1]
+        servo_angle_list[2] = tmp_servo_angle_list[2] - 180
         for pwm in servo_pwm_list[:3]:
             send_data += int_to_bytes(pwm)
         for angle in servo_angle_list[:3]:
             send_data += float_to_bytes(angle)
-        # print(servo_angle_list)
+        print(servo_angle_list)
         # print(send_data)
         udp_socket.sendto(bytes(send_data), client_addr)
         time.sleep(0.01)
@@ -75,6 +84,14 @@ def receiver():
                     print("Connect")
                     is_connected = True
                     client_addr = addr
+                    tmp = arm.get_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST)
+                    if tmp == -1:
+                        continue
+                    for i in range(len(servo_angle_list)):
+                        tmp_servo_angle_list[i], tmp_servo_pwm_list[i] = tmp[i]
+                    servo_angle_list[0] = tmp_servo_angle_list[0] - 180
+                    servo_angle_list[1] = 180 - tmp_servo_angle_list[1]
+                    servo_angle_list[2] = tmp_servo_angle_list[2] - 180
                     send_thread = threading.Thread(target=sender)
                     send_thread.start()
                 else:
@@ -91,14 +108,14 @@ def receiver():
                     # if send_thread is not None:
                     #     send_thread.join()
                     arm.release_joint_group(DYNAMIXEL_SERVO_ID_LIST)
-                    # is_locked = False
+                    is_locked = False
                     # for arm_id in DYNAMIXEL_SERVO_ID_LIST:
                     #     arm.release_servo(arm_id)
                 else:
                     print("Lock")
                     # send_thread = threading.Thread(target=sender)
                     # send_thread.start()
-                    # is_locked = True
+                    is_locked = True
                     arm.lock_joint_group(DYNAMIXEL_SERVO_ID_LIST)
                     # time.sleep(1)
                     # for arm_id in DYNAMIXEL_SERVO_ID_LIST:
@@ -112,11 +129,11 @@ def receiver():
                 for i in range(3):
                     # print(data[1 + i * 4: 1 + (i + 1) * 4])
                     tmp_angle_list[i] = bytes_to_float(data[1 + i * 4: 1 + (i + 1) * 4], '<')
-                cmd_angle_list[0] = 180 + tmp_angle_list[0]
-                cmd_angle_list[1] = 270 - tmp_angle_list[1]
-                cmd_angle_list[2] = 180 + tmp_angle_list[2]
-                print(cmd_angle_list)
-                arm.set_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST[:3], cmd_angle_list)
+                cmd_angle_list[0] = tmp_angle_list[0] + 180
+                cmd_angle_list[1] = 180 - tmp_angle_list[1]
+                cmd_angle_list[2] = tmp_angle_list[2] + 180
+                # print(cmd_angle_list)
+                arm.set_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST, cmd_angle_list)
                 # for i in range(3):
                 #     print(f"Angle {i}: {cmd_angle_list[i]}", end="; ")
                 #     # arm.set_joint_angle(DYNAMIXEL_SERVO_ID_LIST[i], cmd_angle_list[i])
@@ -132,22 +149,22 @@ def receiver():
             for i in range(len(servo_angle_list)):
                 tmp_servo_angle_list[i], tmp_servo_pwm_list[i] = tmp[i]
             servo_angle_list[0] = tmp_servo_angle_list[0] - 180
-            servo_angle_list[1] = 270 - tmp_servo_angle_list[1]
+            servo_angle_list[1] = 180 - tmp_servo_angle_list[1]
             servo_angle_list[2] = tmp_servo_angle_list[2] - 180
         except:
             pass
 shut_down = False
 
-DYNAMIXEL_ADDR = "COM6"
+DYNAMIXEL_ADDR = "COM4"
 DYNAMIXEL_PROTOCOL = 2.0
 DYNAMIXEL_BAUD_RATE = 1000000
-DYNAMIXEL_SERVO_ID_LIST = [11, 12, 14]
+DYNAMIXEL_SERVO_ID_LIST = [11, 12, 13]
 
 SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 1234
 
 # init robot arm
-arm = RobotArmClient.RobotArmClient()
+arm = DynamixelArmClient.DynamixelArmClient()
 arm.connect(DYNAMIXEL_ADDR, DYNAMIXEL_PROTOCOL, DYNAMIXEL_BAUD_RATE)
 
 # check servo

@@ -27,7 +27,7 @@ else:
 from dynamixel_sdk import *
 
 
-class RobotArmClient:
+class DynamixelArmClient:
     def __init__(self):
         self.ADDR_TORQUE_ENABLE = 64
         self.ADDR_GOAL_POSITION = 116
