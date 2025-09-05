@@ -21,7 +21,7 @@ arm.set_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST, [180, 180])
 time.sleep(0.5)
 
 SERVER_HOST = "0.0.0.0"
-SERVER_PORT = 1234
+SERVER_PORT = 1235
 receiver = UDPServer.UDPServer(SERVER_HOST, SERVER_PORT)
 receiver.cmd_callback = set_joint_angle_group
 receiver.start_server()

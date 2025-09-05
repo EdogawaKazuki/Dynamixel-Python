@@ -76,6 +76,9 @@ class UDPServer:
             self.socket.sendto(send_data, self.client_addr)
             time.sleep(0.02)
 
+    def send_data(self, data):
+        self.socket.sendto(data, self.client_addr)
+
     def stop(self):
         self.socket.close()
         print("UDP receiver stopped")
