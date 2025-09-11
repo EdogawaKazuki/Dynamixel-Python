@@ -10,9 +10,6 @@ from scservo_sdk import *
 
 class FeetechArmClient:
     def __init__(self):
-        self.ADDR_TORQUE_ENABLE = 64
-        self.ADDR_GOAL_POSITION = 116
-        self.ADDR_PRESENT_POSITION = 132
         self.MINIMUM_POSITION_VALUE = 0  # Refer to the Minimum Position Limit of product eManual
         self.MAXIMUM_POSITION_VALUE = 4095  # Refer to the Maximum Position Limit of product eManual
         self.LEN_GOAL_POSITION = 4
@@ -119,7 +116,6 @@ class FeetechArmClient:
         self.packetHandler.groupSyncWrite.clearParam()
         return True
 
-
     def get_joint_angle_group(self, ids):
         for id in ids:
             scs_addparam_result = self.groupSyncRead.addParam(id)
@@ -168,3 +164,5 @@ class FeetechArmClient:
         if scs_error != 0:
             print("Error[ID:%d]: %s" % (joint_id, self.packetHandler.getRxPacketError(scs_error)))
 
+    def set_servo_id(self, old_id, new_id):
+        self.packetHandler.set_servo_id(old_id, new_id)

@@ -118,3 +118,12 @@ class sms_sts(protocol_packet_handler):
     def unLockEprom(self, scs_id):
         return self.write1ByteTxRx(scs_id, SMS_STS_LOCK, 0)
 
+    def set_servo_id(self, old_id, new_id):
+        return self.write1ByteTxRx(old_id, SMS_STS_ID, new_id)
+    
+    def set_position_offset(self, scs_id, offset):
+        return self.write2ByteTxRx(scs_id, SMS_STS_OFS_L, offset)
+
+    def set_current_position_as_2048(self, scs_id):
+        return self.write1ByteTxRx(scs_id, SMS_STS_TORQUE_ENABLE, 128)
+

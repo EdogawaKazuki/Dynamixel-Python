@@ -43,7 +43,7 @@ class RobotArm:
         # internal variables
         self.joint_angles = [0.0 for _ in range(6)]
         self.joint_ids = [1, 2, 3, 4, 5, 6]
-    
+
     def set_joint_angle(self, joint_id, angle):
         ''' Set the joint angle of a single joint '''
         self.joint_angles[joint_id - 1] = angle
@@ -58,7 +58,7 @@ class RobotArm:
         for i, joint_id in enumerate(joint_ids):
             self.joint_angles[joint_id - 1] = angles[i]
         return True
-    
+
     def get_joint_angle_group(self, joint_ids):
         ''' Get the joint angles of a group of joints '''
         result = []
@@ -78,7 +78,7 @@ class UDPClient:
         self.receiver_thread = None
 
         self.arm = None
-    
+
     def start_server(self, server_host, server_port, arm):
         ''' Start the server '''
         print("Preparing server")
@@ -93,7 +93,7 @@ class UDPClient:
             print(f"Server start failed. Error: {e}")
             return False
         return True
-    
+
     def start_sender(self):
         print("Starting sender")
         while True:
@@ -114,7 +114,7 @@ class UDPClient:
                 print(f"Sender failed. Error: {e}")
                 break
         print("sender stopped")
-    
+  
     def start_receiver(self):
         print("Server started, waiting for client...")
         
@@ -194,7 +194,6 @@ class UDPClient:
             except Exception as e:
                 pass
 
-
 class SOArmNode(Node):
     def __init__(self, arm):
         super().__init__("so_arm_node")
@@ -202,23 +201,21 @@ class SOArmNode(Node):
         self.subscription = self.create_subscription(Float64MultiArray, "joint_angles_command", self.joint_angles_callback, 10)
         self.timer = self.create_timer(0.02, self.timer_callback)
         self.arm = arm
-    
+
     def timer_callback(self):
         msg = Float64MultiArray()
         # print("Publishing joint angles: ", self.arm.get_joint_angle_group(self.arm.joint_ids))
         msg.data = self.arm.get_joint_angle_group(self.arm.joint_ids)
         self.publisher.publish(msg)
-    
+
     def joint_angles_callback(self, msg):
         self.arm.set_joint_angle_group(self.arm.joint_ids, msg.data)
-
-
 
 class ROSClient:
     def __init__(self, arm):
         self.node = None
         self.arm = arm
-    
+
     def connect(self):
         print("Connecting to ROS...")
         rclpy.init()

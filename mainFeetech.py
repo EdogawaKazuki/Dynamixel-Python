@@ -153,11 +153,12 @@ def receiver():
             pass
 shut_down = False
 
-SERVO_ADDR = "COM9"
+SERVO_ADDR = "COM10"
 SERVO_BAUD_RATE = 1000000
 SERVO_ID_LIST = [1, 2, 3, 4, 5, 6]
 SCALE_FACTOR = [-1, -1, -1, -1, -1, -1]
-OFFSET = [180, 270, 90, 180, 180, 180]
+# OFFSET = [180, 270, 90, 180, 180, 180]
+OFFSET = [180, 180, 180, 180, 180, 180]
 
 SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 1234
