@@ -1,6 +1,6 @@
 import threading
 
-import DynamixelArmClient
+import FeetechArmClient
 import time
 import struct
 import socket
@@ -38,27 +38,30 @@ def int_to_bytes(integer, byte_order='little', signed=True):
 
 
 def sender():
+    print("sender")
     while True:
+        time.sleep(0.02)
         if not is_connected or client_addr is None or shut_down or is_locked:
             break
-        print(is_connected)
         send_data = []
-        tmp = arm.get_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST)
-        if tmp == -1:
+        send_data += int_to_bytes(len(SERVO_ID_LIST))
+        send_data += int_to_bytes(1) # has PWM
+        tmp = arm.get_joint_angle_group(SERVO_ID_LIST)
+        # print(tmp)
+        if not tmp:
             continue
-        for i in range(len(servo_angle_list)):
-            tmp_servo_angle_list[i], tmp_servo_pwm_list[i] = tmp[i]
-        servo_angle_list[0] = tmp_servo_angle_list[0] - 180
-        servo_angle_list[1] = 180 - tmp_servo_angle_list[1]
-        servo_angle_list[2] = tmp_servo_angle_list[2] - 180
-        for pwm in servo_pwm_list[:3]:
-            send_data += int_to_bytes(pwm)
-        for angle in servo_angle_list[:3]:
+        for i in range(len(SERVO_ID_LIST)):
+            servo_angle_list[i] = tmp[i] * SCALE_FACTOR[i] + OFFSET[i]
+            servo_pwm_list[i] = int(tmp[i] * 1024 / 90)
+            # print(i, servo_pwm_list[i])
+        for angle in servo_angle_list:
             send_data += float_to_bytes(angle)
-        print(servo_angle_list)
+        for pwm in servo_pwm_list:
+            send_data += int_to_bytes(pwm)
+        # print(servo_angle_list)
         # print(send_data)
         udp_socket.sendto(bytes(send_data), client_addr)
-        time.sleep(0.01)
+    print("sender stopped")
 
 
 def receiver():
@@ -81,25 +84,32 @@ def receiver():
                 print("Connect Message: ")
                 cmd_data = data[1]
                 if cmd_data == 1:
+                    if is_connected:
+                        print("Already connected")
+                        print("Restarting sender")
+                        is_connected = False
+                        if send_thread is not None:
+                            send_thread.join()
                     print("Connect")
                     is_connected = True
                     client_addr = addr
-                    tmp = arm.get_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST)
+                    tmp = arm.get_joint_angle_group(SERVO_ID_LIST)
                     if tmp == -1:
+                        print("get joint angle failed")
                         continue
+                    print("get joint angle success")
                     for i in range(len(servo_angle_list)):
-                        tmp_servo_angle_list[i], tmp_servo_pwm_list[i] = tmp[i]
-                    servo_angle_list[0] = tmp_servo_angle_list[0] - 180
-                    servo_angle_list[1] = 180 - tmp_servo_angle_list[1]
-                    servo_angle_list[2] = tmp_servo_angle_list[2] - 180
+                        tmp_servo_angle_list[i] = tmp[i]
+                        servo_angle_list[i] = tmp_servo_angle_list[i] * SCALE_FACTOR[i] + OFFSET[i]
                     send_thread = threading.Thread(target=sender)
                     send_thread.start()
+                    print("connect success, sender started`")
                 else:
                     print("Disconnect")
                     is_connected = False
                     if send_thread is not None:
                         send_thread.join()
-                        arm.release_joint_group(DYNAMIXEL_SERVO_ID_LIST)
+                        arm.release_joint_group(SERVO_ID_LIST)
             elif cmd_type == 1:
                 print("Unlock Message: ")
                 cmd_data = data[1]
@@ -107,73 +117,63 @@ def receiver():
                     print("Unlock")
                     # if send_thread is not None:
                     #     send_thread.join()
-                    arm.release_joint_group(DYNAMIXEL_SERVO_ID_LIST)
+                    time.sleep(1)
+                    arm.release_joint_group(SERVO_ID_LIST)
                     is_locked = False
+                    time.sleep(1)
                     # for arm_id in DYNAMIXEL_SERVO_ID_LIST:
-                    #     arm.release_servo(arm_id)
+                        # arm.release_servo(arm_id)
                 else:
                     print("Lock")
                     # send_thread = threading.Thread(target=sender)
                     # send_thread.start()
+                    time.sleep(1)
+                    arm.lock_joint_group(SERVO_ID_LIST)
                     is_locked = True
-                    arm.lock_joint_group(DYNAMIXEL_SERVO_ID_LIST)
-                    # time.sleep(1)
+                    time.sleep(1)
                     # for arm_id in DYNAMIXEL_SERVO_ID_LIST:
                     #     arm.lock_servo(arm_id)
             elif cmd_type == 2:
                 # print("Angle Command")
                 # print(data)
                 angle_cmd_frame += 1
-                tmp_angle_list = [0, 0, 0]
-                cmd_angle_list = [0, 0, 0]
-                for i in range(3):
+                tmp_angle_list = [0 for i in range(len(SERVO_ID_LIST))]
+                cmd_angle_list = [0 for i in range(len(SERVO_ID_LIST))]
+                for i in range(len(SERVO_ID_LIST)):
                     # print(data[1 + i * 4: 1 + (i + 1) * 4])
                     tmp_angle_list[i] = bytes_to_float(data[1 + i * 4: 1 + (i + 1) * 4], '<')
-                cmd_angle_list[0] = tmp_angle_list[0] + 180
-                cmd_angle_list[1] = 180 - tmp_angle_list[1]
-                cmd_angle_list[2] = tmp_angle_list[2] + 180
+                    cmd_angle_list[i] = tmp_angle_list[i] * SCALE_FACTOR[i] + OFFSET[i]
                 # print(cmd_angle_list)
-                arm.set_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST, cmd_angle_list)
-                # for i in range(3):
-                #     print(f"Angle {i}: {cmd_angle_list[i]}", end="; ")
-                #     # arm.set_joint_angle(DYNAMIXEL_SERVO_ID_LIST[i], cmd_angle_list[i])
-                # print()
-            # time.sleep(0.05)
+                arm.set_joint_angle_group(SERVO_ID_LIST, cmd_angle_list)
             if time.time() - timer > 0.5:
                 print("frequency", angle_cmd_frame / 0.5)
                 angle_cmd_frame = 0
                 timer = time.time()
-            tmp = arm.get_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST)
-            if tmp == -1:
-                continue
-            for i in range(len(servo_angle_list)):
-                tmp_servo_angle_list[i], tmp_servo_pwm_list[i] = tmp[i]
-            servo_angle_list[0] = tmp_servo_angle_list[0] - 180
-            servo_angle_list[1] = 180 - tmp_servo_angle_list[1]
-            servo_angle_list[2] = tmp_servo_angle_list[2] - 180
-        except:
+        except Exception as e:
             pass
 shut_down = False
 
-DYNAMIXEL_ADDR = "COM4"
-DYNAMIXEL_PROTOCOL = 2.0
-DYNAMIXEL_BAUD_RATE = 1000000
-DYNAMIXEL_SERVO_ID_LIST = [11, 12, 13]
+SERVO_ADDR = "COM10"
+SERVO_BAUD_RATE = 1000000
+SERVO_ID_LIST = [1, 2, 3, 4, 5, 6]
+SCALE_FACTOR = [-1, -1, -1, -1, -1, -1]
+# OFFSET = [180, 270, 90, 180, 180, 180]
+OFFSET = [180, 180, 180, 180, 180, 180]
 
 SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 1234
 
 # init robot arm
-arm = DynamixelArmClient.DynamixelArmClient()
-arm.connect(DYNAMIXEL_ADDR, DYNAMIXEL_PROTOCOL, DYNAMIXEL_BAUD_RATE)
+arm = FeetechArmClient.FeetechArmClient()
+arm.connect(SERVO_ADDR, SERVO_BAUD_RATE, SERVO_ID_LIST)
 
 # check servo
 locked_servo_id = []
 is_locked = False
-for arm_id in DYNAMIXEL_SERVO_ID_LIST:
+for arm_id in SERVO_ID_LIST:
     if arm.lock_servo(arm_id):
         locked_servo_id.append(arm_id)
-if len(locked_servo_id) != len(DYNAMIXEL_SERVO_ID_LIST):
+if len(locked_servo_id) != len(SERVO_ID_LIST):
     print("Please check dynamixel servo status! Exiting...")
     arm.disconnect()
     exit(-1)
@@ -196,10 +196,10 @@ client_addr = None
 
 receiver_thread = threading.Thread(target=receiver)
 receiver_thread.start()
-servo_angle_list = [0.0 for i in range(len(DYNAMIXEL_SERVO_ID_LIST))]
-servo_pwm_list = [0 for i in range(len(DYNAMIXEL_SERVO_ID_LIST))]
-tmp_servo_angle_list = [0.0 for i in range(len(DYNAMIXEL_SERVO_ID_LIST))]
-tmp_servo_pwm_list = [0 for i in range(len(DYNAMIXEL_SERVO_ID_LIST))]
+servo_angle_list = [0.0 for i in range(len(SERVO_ID_LIST))]
+servo_pwm_list = [0 for i in range(len(SERVO_ID_LIST))]
+tmp_servo_angle_list = [0.0 for i in range(len(SERVO_ID_LIST))]
+tmp_servo_pwm_list = [0 for i in range(len(SERVO_ID_LIST))]
 # while True:
 #     try:
 #         tmp = arm.get_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST)
@@ -219,7 +219,7 @@ tmp_servo_pwm_list = [0 for i in range(len(DYNAMIXEL_SERVO_ID_LIST))]
 receiver_thread.join()
 
 time.sleep(1)
-for arm_id in DYNAMIXEL_SERVO_ID_LIST:
+for arm_id in SERVO_ID_LIST:
     arm.release_servo(arm_id)
     time.sleep(0.1)
 

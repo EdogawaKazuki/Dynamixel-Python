@@ -1,15 +1,27 @@
-
 import time
 import DynamixelArmClient
-DYNAMIXEL_ADDR = "COM12"
+import UDPServer
+
+
+def set_joint_angle_group(angle_list):
+    cmd_list = angle_list[:2]
+    cmd_list[0] = 180 - cmd_list[0]
+    cmd_list[1] = cmd_list[1] + 180
+    arm.set_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST, cmd_list)
+
+
+DYNAMIXEL_ADDR = "COM16"
 DYNAMIXEL_PROTOCOL = 2.0
 DYNAMIXEL_BAUD_RATE = 1000000
-DYNAMIXEL_SERVO_ID_LIST = [14, 15]
-arm = RobotArmClient.DynamixelArmClient()
+DYNAMIXEL_SERVO_ID_LIST = [15, 14]
+arm = DynamixelArmClient.DynamixelArmClient()
 arm.connect(DYNAMIXEL_ADDR, DYNAMIXEL_PROTOCOL, DYNAMIXEL_BAUD_RATE)
+arm.lock_joint_group(DYNAMIXEL_SERVO_ID_LIST)
+arm.set_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST, [180, 180])
 time.sleep(0.5)
-while True:
-    tmp = arm.get_joint_angle_group(DYNAMIXEL_SERVO_ID_LIST)
-    angles = [tmp[0][0] - 180, tmp[1][0] - 180]
-    print(angles)
-    time.sleep(0.1)
+
+SERVER_HOST = "0.0.0.0"
+SERVER_PORT = 1235
+receiver = UDPServer.UDPServer(SERVER_HOST, SERVER_PORT)
+receiver.cmd_callback = set_joint_angle_group
+receiver.start_server()

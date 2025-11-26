@@ -1,0 +1,144 @@
+###############################
+# Python
+###############################
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+*.pyd
+*.dll
+
+###############################
+# Packaging / Distribution
+###############################
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+pip-wheel-metadata/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+###############################
+# Unit test / Coverage
+###############################
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+###############################
+# Type checking / Linting
+###############################
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+###############################
+# Translations
+###############################
+*.mo
+*.pot
+
+###############################
+# Frameworks / Tools (optional but safe)
+###############################
+local_settings.py
+db.sqlite3
+instance/
+.webassets-cache
+.scrapy/
+docs/_build/
+
+###############################
+# Jupyter
+###############################
+.ipynb_checkpoints/
+
+###############################
+# Python version managers
+###############################
+.python-version
+
+# Dependency managers
+Pipfile.lock
+poetry.lock
+.pdm.toml
+__pypackages__/
+
+###############################
+# Environments
+###############################
+.env
+.env.*
+.venv
+.venv*/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+###############################
+# IDE / Editor
+###############################
+.vscode/
+.idea/
+*.iml
+
+###############################
+# OS files
+###############################
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+###############################
+# Logs & Temp
+###############################
+*.log
+logs/
+*.tmp
+*.temp
+*~
+
+###############################
+# Archives
+###############################
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+
+

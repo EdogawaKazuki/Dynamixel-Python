@@ -2,7 +2,7 @@ import socket
 
 # Define the UDP IP and port to listen on
 UDP_IP = "0.0.0.0"  # Listen on all available interfaces
-UDP_PORT = 9998  # Change this to the desired port number
+UDP_PORT = 5000  # Change this to the desired port number
 
 # Create a UDP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
