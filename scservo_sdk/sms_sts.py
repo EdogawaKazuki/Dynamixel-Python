@@ -27,6 +27,7 @@ SMS_STS_MIN_ANGLE_LIMIT_L = 9
 SMS_STS_MIN_ANGLE_LIMIT_H = 10
 SMS_STS_MAX_ANGLE_LIMIT_L = 11
 SMS_STS_MAX_ANGLE_LIMIT_H = 12
+SMS_STS_TORQUE_LIMIT = 16
 SMS_STS_CW_DEAD = 26
 SMS_STS_CCW_DEAD = 27
 SMS_STS_OFS_L = 31
@@ -126,4 +127,7 @@ class sms_sts(protocol_packet_handler):
 
     def set_current_position_as_2048(self, scs_id):
         return self.write1ByteTxRx(scs_id, SMS_STS_TORQUE_ENABLE, 128)
+
+    def set_torque_limit(self, scs_id, torque_limit):
+        return self.write2ByteTxRx(scs_id, SMS_STS_TORQUE_LIMIT, torque_limit)
 
