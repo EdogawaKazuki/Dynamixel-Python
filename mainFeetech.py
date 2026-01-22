@@ -189,24 +189,34 @@ def receiver():
 def find_com_port():
     com_port_list = []
     if platform.system() == "Windows":
+        print("Windows system detected")
         ports = serial.tools.list_ports.comports()
         for port in ports:
             if port.device.startswith("COM"):
                 com_port_list.append((port.device, port.description))
                 print(f"Found COM port: {port.device}, {port.description}")
+    elif platform.system() == "Darwin":
+        print("MacOS system detected")
+        ports = serial.tools.list_ports.comports(include_links=True)
+        print(f"Found {len(ports)} ports")
+        for port in ports:
+            # print(f"Port: {port.device}, {port.description}")
+            if "usbmodem" in port.device:
+                com_port_list.append((port.device, port.description))
+                print(f"Found USB modem port: {port.device}, {port.description}")
 
     com_port = None
     if len(com_port_list) == 0:
         print("No COM port found")
         exit(-1)
     for tmp_com_port in com_port_list:
-        if "CH343" in tmp_com_port[1]:
+        if "CH343" in tmp_com_port[1] or "USB Single Serial" in tmp_com_port[1]:
             com_port = tmp_com_port[0]
             break
     else:
         print("No CH343 COM port found")
         exit(-1)
-    
+    # exit(-1)
     user_input = input(f"Enter the last digit of the COM port (Default:{com_port}): ")
     if user_input != "":
         com_port = com_port[:-1] + user_input
