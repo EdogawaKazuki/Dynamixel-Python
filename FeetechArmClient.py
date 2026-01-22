@@ -69,6 +69,9 @@ class FeetechArmClient:
         self.connected = True
         self.groupSyncRead = GroupSyncRead(self.packetHandler, SMS_STS_PRESENT_POSITION_L, 4)
         self.joint_angles = self.get_joint_angle_group(ids)
+        for joint_id in ids[:1]:
+            self.packetHandler.set_position_P_gain(joint_id, 16)
+            self.packetHandler.set_position_I_gain(joint_id, 16)
         return self.portHandler, self.packetHandler
 
     def disconnect(self):
